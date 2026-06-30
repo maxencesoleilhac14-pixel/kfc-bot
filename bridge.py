@@ -66,6 +66,19 @@ class KFCBridge:
 
     async def start(self):
         """Connecte Telethon et récupère l'entité du bot."""
+
+        session_b64 = os.environ.get("SESSION_BASE64", "")
+        if session_b64 and not os.path.exists(SESSION_FILE):
+            try:
+                import base64, gzip
+                raw = base64.b64decode(session_b64.strip())
+                data = gzip.decompress(raw)
+                with open(SESSION_FILE, "wb") as f:
+                    f.write(data)
+                logger.info("Session restored from SESSION_BASE64 (%d bytes)", len(data))
+            except Exception as e:
+                logger.error("Session restore failed: %s", e)
+
         code = os.environ.get("TG_CODE")
         if not code and os.path.exists("tg_code.txt"):
             code = open("tg_code.txt", encoding="utf-8").read().strip()
@@ -75,7 +88,11 @@ class KFCBridge:
         kwargs = {"phone": PHONE}
         if code:
             kwargs["code_callback"] = lambda: code
-        await self.client.start(**kwargs)
+        try:
+            await self.client.start(**kwargs)
+        except (EOFError, ConnectionError) as e:
+            logger.error("Bridge auth failed: %s. Session file invalid or expired. Set TG_CODE env var for fresh auth.", e)
+            raise
 
         self.bot_entity = await self.client.get_entity(TARGET_BOT)
         logger.info("Bridge connecté à @%s", TARGET_BOT)
