@@ -1,8 +1,12 @@
 #!/bin/bash
 # Restore Telethon session from env var if provided (gzip+base64)
 if [ -n "$SESSION_BASE64" ]; then
-    echo "$SESSION_BASE64" | base64 -d | gunzip -c > session_analyze.session 2>/dev/null || echo "$SESSION_BASE64" | base64 -d > session_analyze.session
-    echo "Session file restored from SESSION_BASE64"
+    python -c "
+import base64, gzip, sys
+data = base64.b64decode(sys.argv[1])
+decompressed = gzip.decompress(data)
+sys.stdout.buffer.write(decompressed)
+" "$SESSION_BASE64" > session_analyze.session && echo "Session file restored from SESSION_BASE64" || echo "Failed to restore session"
 fi
 
-python bot.py
+exec python bot.py
