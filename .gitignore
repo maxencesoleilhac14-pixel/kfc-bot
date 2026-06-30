@@ -1,0 +1,15 @@
+.env
+session_analyze.session
+tg_code.txt
+__pycache__/
+*.pyc
+*.pyo
+bot.log
+bot.err
+bot_test.log
+bot_test.err
+session_base64.txt
+session_analyze.session-journal
+kfc_bot.db
+kfc_bot.db-shm
+kfc_bot.db-wal
